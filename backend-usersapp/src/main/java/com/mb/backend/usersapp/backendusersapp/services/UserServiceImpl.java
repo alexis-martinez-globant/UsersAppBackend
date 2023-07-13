@@ -45,7 +45,6 @@ public class UserServiceImpl implements UserService {
             User userDB = optionalUser.orElseThrow();
             userDB.setUserName(user.getUserName());
             userDB.setEmail(user.getEmail());
-            userDB.setPassword(	user.getPassword());
             userUpdated = this.save(userDB);
         }
         return Optional.ofNullable(userUpdated);
