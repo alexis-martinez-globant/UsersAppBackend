@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "users")
@@ -17,12 +19,14 @@ public class User {
     private Long id;
 
     @NotBlank
+    @Size(min=4, max=12)
     @Column(unique = true)
     private String userName;
     
-    @NotBlank
+    @NotEmpty
     private String password;
     
+    @NotBlank
     @Email
     @Column(unique = true)
     private String email;
