@@ -44,7 +44,7 @@ public class UserServiceImpl implements UserService {
         User userUpdated = null;
         if (optionalUser.isPresent()) {
             User userDB = optionalUser.orElseThrow();
-            userDB.setUserName(user.getUserName());
+            userDB.setUsername(user.getUsername());
             userDB.setEmail(user.getEmail());
             userUpdated = this.save(userDB);
         }
