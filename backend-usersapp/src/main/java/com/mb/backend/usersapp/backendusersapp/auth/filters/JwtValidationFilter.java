@@ -15,6 +15,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import static com.mb.backend.usersapp.backendusersapp.auth.TokenJwtConfig.SECRET_KEY;
+import static com.mb.backend.usersapp.backendusersapp.auth.TokenJwtConfig.PREFIX_TOKEN;
+import static com.mb.backend.usersapp.backendusersapp.auth.TokenJwtConfig.HEADER_AUTHORIZATION;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -31,24 +34,27 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
-        String header = request.getHeader("Authorization");
-        if(header == null || !header.startsWith("Bearer")){
+        String header = request.getHeader(HEADER_AUTHORIZATION);
+        if(header == null || !header.startsWith(PREFIX_TOKEN)){
             chain.doFilter(request, response);
             return;
         }
 
-        String token = header.replace("Bearer", "");
+        String token = header.replace(PREFIX_TOKEN, "");
         byte[] tokenDecodeBytes = Base64.getDecoder().decode(token);
         String tokenDecode = new String(tokenDecodeBytes);
 
-        String[] tokenArr = tokenDecode.split(".");
+        String[] tokenArr = tokenDecode.split("\\.");
         String secret = tokenArr[0];
         String username = tokenArr[1];
+        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        System.out.println(secret);
+        System.out.println(username);
 
-        if("token_text".equals(secret)){
+        if(SECRET_KEY.equals(secret)){
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, authorities);
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             chain.doFilter(request, response);

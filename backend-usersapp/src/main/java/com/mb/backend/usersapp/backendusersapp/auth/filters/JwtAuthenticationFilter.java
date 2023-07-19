@@ -21,6 +21,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import static com.mb.backend.usersapp.backendusersapp.auth.TokenJwtConfig.*;
+
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private AuthenticationManager authenticationManager;
@@ -61,10 +63,10 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
         String username = ((org.springframework.security.core.userdetails.User)authResult.getPrincipal())
             .getUsername();
-        String baseInput = "token_text." + username;
+        String baseInput = SECRET_KEY  + "." + username;
         String token = Base64.getEncoder().encodeToString(baseInput.getBytes());
         
-        response.addHeader("Authorization", "Bearer " + token);
+        response.addHeader(HEADER_AUTHORIZATION, PREFIX_TOKEN +token);
         
         Map<String, Object> body = new HashMap<>();
         body.put("token", token);
