@@ -3,16 +3,17 @@ package com.mb.backend.usersapp.backendusersapp.services;
 import java.util.List;
 import java.util.Optional;
 
+import com.mb.backend.usersapp.backendusersapp.models.dto.UserDto;
 import com.mb.backend.usersapp.backendusersapp.models.entities.User;
 import com.mb.backend.usersapp.backendusersapp.models.entities.UserRequest;
 
 public interface UserService {
-    List<User> findAll();
+    List<UserDto> findAll();
 
-    Optional<User> findById(Long id);
+    Optional<UserDto> findById(Long id);
 
-    User save(User user);
-    Optional<User> update(UserRequest user, Long id);
+    UserDto save(User user);
+    Optional<UserDto> update(UserRequest user, Long id);
 
     void remove(Long id);
 }

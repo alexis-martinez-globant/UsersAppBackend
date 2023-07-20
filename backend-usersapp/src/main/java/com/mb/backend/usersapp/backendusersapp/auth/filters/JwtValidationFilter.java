@@ -1,10 +1,9 @@
 package com.mb.backend.usersapp.backendusersapp.auth.filters;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Base64;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -15,6 +14,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mb.backend.usersapp.backendusersapp.auth.SimpleGrantedAuthorityJsonCreator;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+
 import static com.mb.backend.usersapp.backendusersapp.auth.TokenJwtConfig.SECRET_KEY;
 import static com.mb.backend.usersapp.backendusersapp.auth.TokenJwtConfig.PREFIX_TOKEN;
 import static com.mb.backend.usersapp.backendusersapp.auth.TokenJwtConfig.HEADER_AUTHORIZATION;
@@ -41,25 +46,32 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
         }
 
         String token = header.replace(PREFIX_TOKEN, "");
-        byte[] tokenDecodeBytes = Base64.getDecoder().decode(token);
-        String tokenDecode = new String(tokenDecodeBytes);
+       
+        try {
+        
+            Claims claims = Jwts
+                .parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
 
-        String[] tokenArr = tokenDecode.split("\\.");
-        String secret = tokenArr[0];
-        String username = tokenArr[1];
-        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-        System.out.println(secret);
-        System.out.println(username);
+            Object authoritiesClaims = claims.get("authorities");
+            String username = claims.getSubject();
+            Collection<? extends GrantedAuthority> authorities = Arrays
+                .asList(new ObjectMapper()
+                .addMixIn(SimpleGrantedAuthority.class, SimpleGrantedAuthorityJsonCreator.class)
+                .readValue(authoritiesClaims.toString().getBytes(), SimpleGrantedAuthority[].class));
+            
 
-        if(SECRET_KEY.equals(secret)){
-            List<GrantedAuthority> authorities = new ArrayList<>();
-            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
-
+    
             SecurityContextHolder.getContext().setAuthentication(authentication);
             chain.doFilter(request, response);
-        } else {
+            
+        } catch (JwtException e) {
             Map<String, String> body = new HashMap<>();
+            body.put("error", e.getMessage());
             body.put("message", "Invalid JWT  token");
 
             response.getWriter().write(new ObjectMapper().writeValueAsString(body));

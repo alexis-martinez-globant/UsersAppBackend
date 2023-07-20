@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 // import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mb.backend.usersapp.backendusersapp.models.dto.UserDto;
 import com.mb.backend.usersapp.backendusersapp.models.entities.User;
 import com.mb.backend.usersapp.backendusersapp.models.entities.UserRequest;
 import com.mb.backend.usersapp.backendusersapp.services.UserService;
@@ -35,23 +36,18 @@ public class UserController {
     private UserService service;
 
     @GetMapping
-    public List<User> list(){
+    public List<UserDto> list(){
         return service.findAll();
     };
     
     @GetMapping("/{id}")
     public ResponseEntity<?> show(@PathVariable Long id){
-       Optional<User> userOptional = service.findById(id);
+       Optional<UserDto> userOptional = service.findById(id);
         if(userOptional.isPresent()){
             return ResponseEntity.ok(userOptional.orElseThrow());
         }
         return ResponseEntity.notFound().build(); // 404 
     }
-    // @GetMapping("/{id}")
-    // public User show(@PathVariable Long id){
-    //     return service.findById(id).orElseThrow();
-    // }
-
 
     @PostMapping 
     public ResponseEntity<?> create(@Valid @RequestBody User user, BindingResult result){
@@ -60,29 +56,23 @@ public class UserController {
        }
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(user)); // 201
     }
-    // @PostMapping 
-    // @ResponseStatus(HttpStatus.CREATED)
-    // public User create(@RequestBody User user){
-        //     return service.save(user);
-        // }
-        
-
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@Valid @RequestBody UserRequest user, BindingResult result, @PathVariable Long id){
         if (result.hasErrors()) {
             return validation(result);
         }
-        Optional<User> optionalUser = service.update(user, id);
+        Optional<UserDto> optionalUser = service.update(user, id);
+
         if (optionalUser.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.save(optionalUser.orElseThrow()));
+            return ResponseEntity.status(HttpStatus.CREATED).body(optionalUser.orElseThrow());
         }
         return ResponseEntity.notFound().build(); // 404 
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> remove(@PathVariable Long id){
-        Optional<User> optionalUser = service.findById(id);
+        Optional<UserDto> optionalUser = service.findById(id);
         if (optionalUser.isPresent()) {
             service.remove(id);
             return ResponseEntity.noContent().build(); // 204
