@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mb.backend.usersapp.backendusersapp.models.dto.UserDto;
 import com.mb.backend.usersapp.backendusersapp.models.dto.mapper.DtoMapperUser;
+import com.mb.backend.usersapp.backendusersapp.models.entities.IUser;
 import com.mb.backend.usersapp.backendusersapp.models.entities.Role;
 import com.mb.backend.usersapp.backendusersapp.models.entities.User;
 import com.mb.backend.usersapp.backendusersapp.models.entities.UserRequest;
@@ -27,7 +28,7 @@ public class UserServiceImpl implements UserService {
     private UserRepository repository;
 
     @Autowired RoleRepository roleRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Override
@@ -39,29 +40,23 @@ public class UserServiceImpl implements UserService {
             .map(u -> DtoMapperUser.builder().setUser(u).build())
             .collect(Collectors.toList());
     }
-    
+
     @Override
     @Transactional(readOnly=true)
     public Optional<UserDto> findById(Long id) {
         return repository.findById(id).map(u -> DtoMapperUser.builder().setUser(u).build());
     }
-    
+
     @Override
     @Transactional
     public UserDto save(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        Optional<Role> o = roleRepository.findByName("ROLE_USER");
-
-        List<Role> roles = new ArrayList<>();
-        if (o.isPresent()) {
-            roles.add(o.orElseThrow());
-        }
-        user.setRoles(roles);
+        user.setRoles(getRoles(user));
 
         return DtoMapperUser.builder().setUser(repository.save(user)).build();
     }
-    
+
     @Override
     @Transactional
     public Optional<UserDto> update(UserRequest user, Long id) {
@@ -69,6 +64,7 @@ public class UserServiceImpl implements UserService {
         User userUpdated = null;
         if (o.isPresent()) {
             User userDB = o.orElseThrow();
+            userDB.setRoles(getRoles(user));
             userDB.setUsername(user.getUsername());
             userDB.setEmail(user.getEmail());
             userUpdated = repository.save(userDB);
@@ -81,5 +77,20 @@ public class UserServiceImpl implements UserService {
     public void remove(Long id) {
         repository.deleteById(id);
     }
-    
+
+    private List<Role> getRoles(IUser user){
+        Optional<Role> ou = roleRepository.findByName("ROLE_USER");
+
+            List<Role> roles = new ArrayList<>();
+            if (ou.isPresent()) {
+                roles.add(ou.orElseThrow());
+            }
+            if (user.isAdmin()) {
+                Optional<Role> oa = roleRepository.findByName("ROLE_ADMIN");
+                if (oa.isPresent()) {
+                    roles.add(oa.orElseThrow());
+                }
+            }
+            return roles;
+    }
 }
